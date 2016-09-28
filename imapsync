@@ -1662,8 +1662,8 @@ my %h2_folders_of_md5 = (  ) ;
 
 FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 
-        last FOLDER if $imap1->IsUnconnected(  ) ;
-        last FOLDER if $imap2->IsUnconnected(  ) ;
+        $imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+        $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
 	my $h2_fold = imap2_folder_name( $h1_fold ) ;
 
@@ -1719,12 +1719,12 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 
 	next FOLDER if ( $justfolders ) ;
 
-        last FOLDER if $imap1->IsUnconnected(  ) ;
-        last FOLDER if $imap2->IsUnconnected(  ) ;
+        $imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+        $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
         my $h1_msgs_all_hash_ref = {  } ;
 	my @h1_msgs = select_msgs( $imap1, $h1_msgs_all_hash_ref, $search1, $h1_fold );
-	last FOLDER if $imap1->IsUnconnected(  ) ;
+	$imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
 
         my $h1_msgs_nb = scalar  @h1_msgs  ;
         $h1{ $h1_fold }{ 'messages_nb' } = $h1_msgs_nb ;
@@ -1735,7 +1735,7 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 
         my $h2_msgs_all_hash_ref = {  } ;
 	my @h2_msgs = select_msgs( $imap2, $h2_msgs_all_hash_ref, $search2, $h2_fold ) ;
-	last FOLDER if $imap2->IsUnconnected(  ) ;
+	$imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
         my $h2_msgs_nb = scalar  @h2_msgs  ;
         $h2{ $h2_fold }{ 'messages_nb' } = $h2_msgs_nb ;
@@ -1751,8 +1751,8 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 	my $h1_uidvalidity = $imap1->uidvalidity(  ) || q{} ;
 	my $h2_uidvalidity = $imap2->uidvalidity(  ) || q{} ;
 
-        last FOLDER if $imap1->IsUnconnected(  ) ;
-        last FOLDER if $imap2->IsUnconnected(  ) ;
+        $imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+        $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
 	if ( $usecache ) {
 		myprint( "cache directory: $cache_dir\n"  ) ;
@@ -2036,8 +2036,8 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
         $debug and myprint( "Host2 uidnext: $h2_uidnext\n"  ) ;
 	$h2_uidguess = $h2_uidnext ;
 	MESS: foreach my $m_id (@h1_hash_keys_sorted_by_uid) {
-        	last FOLDER if $imap1->IsUnconnected(  ) ;
-                last FOLDER if $imap2->IsUnconnected(  ) ;
+        	$imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+                $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
 		#myprint( "h1_nb_msg_processed: $h1_nb_msg_processed\n"  ) ;
 		my $h1_size  = $h1_hash{$m_id}{'s'};
@@ -2086,15 +2086,15 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 			$debug and myprint(
 			"Host1 size  msg $h1_fold/$h1_msg = $h1_size <> $h2_size = Host2 $h2_fold/$h2_msg\n" ) ;
 		}
-                last FOLDER if $imap2->IsUnconnected(  ) ;
+                $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 
 		if ( $delete ) {
 			delete_message_on_host1( $h1_msg, $h1_fold ) ;
 		}
 	}
 	# END MESS: loop
-        last FOLDER if $imap1->IsUnconnected(  ) ;
-        last FOLDER if $imap2->IsUnconnected(  ) ;
+        $imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+        $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 	MESS_IN_CACHE: foreach my $h1_msg ( @h1_msgs_in_cache ) {
 		my $h2_msg = $cache_1_2_ref->{ $h1_msg } ;
 		$debugcache and myprint( "cache messages update flags $h1_msg->$h2_msg\n" ) ;
@@ -2103,15 +2103,15 @@ FOLDER: foreach my $h1_fold ( @h1_folders_wanted ) {
 		$total_bytes_skipped += $h1_size;
 		$nb_msg_skipped += 1;
                 $h1_nb_msg_processed +=1 ;
-                last FOLDER if $imap2->IsUnconnected(  ) ;
+                $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 	}
 
 	#myprint( "Messages by uid: ", map { "$_ " } keys %h1_msgs_copy_by_uid, "\n"  ) ;
 	MESS_BY_UID: foreach my $h1_msg ( sort { $a <=> $b } keys %h1_msgs_copy_by_uid ) {
 		#
 		$debug and myprint( "Copy by uid $h1_fold/$h1_msg\n"  ) ;
-                last FOLDER if $imap1->IsUnconnected(  ) ;
-                last FOLDER if $imap2->IsUnconnected(  ) ;
+                $imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
+                $imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 		my $h2_msg = copy_message( $sync, $h1_msg, $h1_fold, $h2_fold, $h1_fir_ref, $permanentflags2, $cache_dir ) ;
                 if( $delete2 and exists  $h2_folders_from_1_several{ $h2_fold }  and $h2_msg ) {
                 	myprint( "Host2: msg $h2_fold/$h2_msg will cancel deletion [fresh copy] on host2\n"  ) ;
@@ -2695,7 +2695,9 @@ sub tests_live_result {
 
 sub foldersizesatend {
 	timenext(  ) ;
+	$imap1->connect(  ) if $imap1->IsUnconnected(  ) ;
 	return if ( $imap1->IsUnconnected(  ) ) ;
+	$imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
 	return if ( $imap2->IsUnconnected(  ) ) ;
 	# Get all folders on host2 again since new were created
 	@h2_folders_all = sort $imap2->folders();
@@ -3828,6 +3830,7 @@ sub create_folder {
         my( $imap2 , $h2_fold , $h1_fold ) = @_ ;
         my( @parts , $parent ) ;
 
+		$imap2->connect(  ) if $imap2->IsUnconnected(  ) ;
         if ( $imap2->IsUnconnected(  ) ) {
                 myprint( "Host2: Unconnected state\n"  ) ;
                 return( 0 ) ;
@@ -4438,7 +4441,8 @@ sub foldersizes {
 		        myprint( " does not exist\n" ) ;
 			next ;
 		}
-
+		
+		$imap->connect(  ) if $imap->IsUnconnected(  ) ;
 		last if $imap->IsUnconnected(  ) ;
 		# FTGate is RFC buggy with EXAMINE it does not act as SELECT
 		#unless ( $imap->examine( $folder ) ) {
@@ -4449,6 +4453,7 @@ sub foldersizes {
 			errors_incr( $sync, $error ) ;
 			next ;
 		}
+		$imap->connect(  ) if $imap->IsUnconnected(  ) ;
 		last if $imap->IsUnconnected(  ) ;
 
 		my $hash_ref = { } ;
@@ -4457,6 +4462,7 @@ sub foldersizes {
 		my $biggest_in_folder = 0 ;
 		@{ $hash_ref }{ @msgs } = ( undef ) if @msgs ;
 
+		$imap->connect(  ) if $imap->IsUnconnected(  ) ;
 		last if $imap->IsUnconnected(  ) ;
 		if ( $nb_msgs > 0 and @msgs ) {
                 	if ( $abletosearch ) {
@@ -8095,6 +8101,8 @@ sub delete1emptyfolders {
         if ( ! $sync->{delete1emptyfolders} ) { return ; } # abort if --delete1emptyfolders off
         my $imap = $sync->{imap1} ;
         if ( ! $imap ) { return ; } # abort if no imap
+		
+		$imap->connect(  ) if $imap->IsUnconnected(  ) ;
         if ( $imap->IsUnconnected(  ) ) { return ; } # abort if diesconnected
         
         my %folders_kept ;
